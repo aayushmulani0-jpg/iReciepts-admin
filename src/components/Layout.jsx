@@ -1,22 +1,42 @@
+import { useContext } from "react";
 import { Outlet } from "react-router-dom";
-import { Layout as AntLayout, Avatar, Typography, Space, theme, Popover, Divider } from "antd";
+import { Layout as AntLayout, Avatar, Typography, Space, theme, Popover, Divider, Flex, Switch } from "antd";
 import Sidebar from "./Sidebar";
-import { UserOutlined } from "@ant-design/icons";
+import { UserOutlined, SunOutlined, MoonOutlined } from "@ant-design/icons";
+import { ThemeContext } from "../ThemeContext";
 
 const { Header, Content } = AntLayout;
 const { Text } = Typography;
 
 const Layout = () => {
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
+  const token = localStorage.getItem("adminToken");
+
+  let adminEmail = "";
+
+
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+
+      adminEmail = payload.email || "";
+
+    } catch (e) {
+      // Failed to parse token
+    }
+  }
+
   const userDetails = (
     <div style={{ width: 200 }}>
       <Space direction="vertical" size={2} style={{ width: "100%" }}>
-        <Text strong>Admin User</Text>
-        <Text type="secondary">admin@ireceipts.com</Text>
+
+        <Text type="secondary">{adminEmail}</Text>
         <Divider style={{ margin: "8px 0" }} />
+
         <Text>Role: Administrator</Text>
         <Text>Status: Active</Text>
       </Space>
@@ -26,25 +46,30 @@ const Layout = () => {
   return (
     <AntLayout style={{ height: "100vh", overflow: "hidden" }}>
       <Sidebar />
-      <AntLayout style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <Header style={{ padding: "0 24px", background: colorBgContainer, display: "flex", justifyContent: "space-between", alignItems: "center", flex: "0 0 auto" }}>
-          <div></div>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", lineHeight: "1.2" }}>
-              <Text strong>Admin User</Text>
-              <Text type="secondary" style={{ fontSize: "12px" }}>admin@ireceipts.com</Text>
-            </div>
-            <div>
+      <Flex vertical flex={1} style={{ overflow: "hidden" }}>
+        <Header style={{ padding: "0 24px", background: colorBgContainer }}>
+          <Flex justify="flex-end" align="center" style={{ height: "100%" }}>
+            <Flex align="center" gap="middle">
+              <Switch
+                checked={isDarkMode}
+                onChange={toggleTheme}
+                checkedChildren={<MoonOutlined />}
+                unCheckedChildren={<SunOutlined />}
+              />
+              <Flex vertical align="flex-end" style={{ lineHeight: "1.2" }}>
+
+                <Text type="secondary" style={{ fontSize: "12px" }}>{adminEmail}</Text>
+              </Flex>
               <Popover content={userDetails} title="Profile Details" trigger="hover" placement="bottomRight">
                 <Avatar icon={<UserOutlined />} style={{ backgroundColor: "#1677ff", cursor: "pointer" }} />
               </Popover>
-            </div>
-          </div>
+            </Flex>
+          </Flex>
         </Header>
-        <Content style={{ margin: "24px", background: colorBgContainer, padding: 24, borderRadius: borderRadiusLG, overflow: "auto", flex: "1" }}>
+        <Content style={{ margin: "24px", background: colorBgContainer, padding: 24, borderRadius: borderRadiusLG, overflow: "auto" }}>
           <Outlet />
         </Content>
-      </AntLayout>
+      </Flex>
     </AntLayout>
   );
 };
