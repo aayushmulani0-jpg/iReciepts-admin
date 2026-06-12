@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getBills, getUsers } from "../api";
-import { Table, Card, Input, Button, Avatar, Space, Typography, message, Popover, Divider } from "antd";
-import { SearchOutlined, FilePdfOutlined, UserOutlined } from "@ant-design/icons";
+import { Table, Card, Button, Avatar, Space, Typography, message, Popover, Divider } from "antd";
+import { FilePdfOutlined, UserOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -13,25 +13,32 @@ const Bills = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  useEffect(() => {
+    const fetchUsersOnce = async () => {
+      try {
+        const usersData = await getUsers(1, 1000);
+        const rawUsers = usersData.data || [];
+        const map = {};
+        if (Array.isArray(rawUsers)) {
+          rawUsers.forEach((u) => {
+            const id = u._id || u.id;
+            if (id) map[id] = u;
+          });
+        }
+        setUsersMap(map);
+      } catch (err) {
+        console.error("Failed to load users.", err);
+      }
+    };
+    fetchUsersOnce();
+  }, []);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [billsData, usersData] = await Promise.all([
-        getBills(currentPage, pageSize),
-        getUsers(1, 1000)
-      ]);
+      const billsData = await getBills(currentPage, pageSize);
       setBills(billsData.data || []);
       setTotal(billsData.meta?.total || 0);
-
-      const rawUsers = usersData.data || [];
-      const map = {};
-      if (Array.isArray(rawUsers)) {
-        rawUsers.forEach((u) => {
-          const id = u._id || u.id;
-          if (id) map[id] = u;
-        });
-      }
-      setUsersMap(map);
     } catch (err) {
       console.error("Failed to load data.", err);
       message.error(err.message || "Failed to load bills.");

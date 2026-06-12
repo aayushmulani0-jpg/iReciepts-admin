@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getUserById, getBills } from "../api";
-import { 
-  Table, Card, Button, Avatar, Space, Typography, 
-  message, Divider, Row, Col, Statistic, Tag, Flex
+import {
+  Table, Card, Button, Avatar, Space, Typography,
+  message, Statistic, Tag, Flex
 } from "antd";
-import { 
-  ArrowLeftOutlined, UserOutlined, FilePdfOutlined, 
+import {
+  ArrowLeftOutlined, UserOutlined, FilePdfOutlined,
   MailOutlined, IdcardOutlined, CalendarOutlined,
-  DollarOutlined, FileTextOutlined
+  FileTextOutlined
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -28,7 +28,7 @@ const UserPreview = () => {
         getUserById(id),
         getBills(1, 1000, id)
       ]);
-      
+
       const userData = userRes?.data || null;
       setUser(userData);
 
@@ -125,15 +125,15 @@ const UserPreview = () => {
   return (
     <Flex vertical gap="large" style={{ width: "100%" }}>
       <Flex align="center" gap="middle">
-        <Button 
-          icon={<ArrowLeftOutlined />} 
+        <Button
+          icon={<ArrowLeftOutlined />}
           onClick={() => navigate(-1)}
         >
           Back
         </Button>
         <div>
           <Title level={2} style={{ margin: 0 }}>User Profile</Title>
-          <Text type="secondary">Detailed view of user and their bills</Text>
+
         </div>
       </Flex>
 
@@ -155,7 +155,10 @@ const UserPreview = () => {
                     {(user.role || "user").toUpperCase()}
                   </Tag>
                 </Space>
-                <Text type="secondary" style={{ fontSize: "16px" }}>{user.email || "No Email"}</Text>
+                <Space size="small">
+                  <MailOutlined style={{ color: "#8c8c8c" }} />
+                  <Text copyable type="secondary" style={{ fontSize: "16px" }}>{user.email || "No Email"}</Text>
+                </Space>
                 <Space size="small">
                   <IdcardOutlined style={{ color: "#8c8c8c" }} />
                   <Text copyable style={{ color: "#8c8c8c", fontFamily: "monospace" }}>{user._id || user.id}</Text>
@@ -169,10 +172,10 @@ const UserPreview = () => {
               </Space>
             </Space>
 
-            <Statistic 
-              title="Total Bills" 
-              value={stats.totalBills} 
-              prefix={<FileTextOutlined />} 
+            <Statistic
+              title="Total Bills"
+              value={stats.totalBills}
+              prefix={<FileTextOutlined />}
               valueStyle={{ fontSize: "32px", color: "#1677ff" }}
               style={{ textAlign: "right", paddingRight: "24px" }}
             />
