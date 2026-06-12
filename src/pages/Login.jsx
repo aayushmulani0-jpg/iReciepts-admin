@@ -17,7 +17,7 @@ const Login = () => {
 
     try {
       const response = await loginAdmin(values.email, values.password);
-      
+
       const token =
         response?.token ||
         response?.accessToken ||
@@ -77,7 +77,8 @@ const Login = () => {
             name="email"
             rules={[
               { required: true, message: "Please input your email!" },
-              { type: "email", message: "Please enter a valid email!" }
+              { type: "email", message: "Please enter a valid email address!" },
+              { whitespace: true, message: "Email cannot be empty spaces!" }
             ]}
           >
             <Input prefix={<UserOutlined />} placeholder="admin@ireceipts.com" />
@@ -85,7 +86,9 @@ const Login = () => {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: "Please input your password!" }]}
+            rules={[
+              { required: true, message: "Please input your password!" },
+            ]}
           >
             <Input.Password prefix={<LockOutlined />} placeholder="••••••••" />
           </Form.Item>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getBills, getUsers } from "../api";
 import { Table, Card, Input, Button, Avatar, Space, Typography, message, Popover, Divider } from "antd";
 import { SearchOutlined, FilePdfOutlined, UserOutlined } from "@ant-design/icons";
@@ -13,36 +13,37 @@ const Bills = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [billsData, usersData] = await Promise.all([
-          getBills(currentPage, pageSize),
-          getUsers(1, 1000)
-        ]);
-        setBills(billsData.data || []);
-        setTotal(billsData.meta?.total || 0);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [billsData, usersData] = await Promise.all([
+        getBills(currentPage, pageSize),
+        getUsers(1, 1000)
+      ]);
+      setBills(billsData.data || []);
+      setTotal(billsData.meta?.total || 0);
 
-        const rawUsers = usersData.data || [];
-        const map = {};
-        if (Array.isArray(rawUsers)) {
-          rawUsers.forEach((u) => {
-            const id = u._id || u.id;
-            if (id) map[id] = u;
-          });
-        }
-        setUsersMap(map);
-      } catch (err) {
-        console.error("Failed to load data.", err);
-        message.error(err.message || "Failed to load bills.");
-        setBills([]);
-      } finally {
-        setLoading(false);
+      const rawUsers = usersData.data || [];
+      const map = {};
+      if (Array.isArray(rawUsers)) {
+        rawUsers.forEach((u) => {
+          const id = u._id || u.id;
+          if (id) map[id] = u;
+        });
       }
-    };
-    fetchData();
+      setUsersMap(map);
+    } catch (err) {
+      console.error("Failed to load data.", err);
+      message.error(err.message || "Failed to load bills.");
+      setBills([]);
+    } finally {
+      setLoading(false);
+    }
   }, [currentPage, pageSize]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const columns = [
 
@@ -77,8 +78,9 @@ const Bills = () => {
 
           let avatarNode = <Avatar icon={<UserOutlined />} style={{ cursor: "pointer" }} />;
 
-          if (user.avtar) {
-            avatarNode = <Avatar src={user.avtar} style={{ cursor: "pointer" }} />;
+          const avatarUrl = user.avatar || user.profilePicture || user.picture || user.avtar;
+          if (avatarUrl) {
+            avatarNode = <Avatar src={avatarUrl} style={{ cursor: "pointer" }} />;
           } else if (user.name) {
             avatarNode = <Avatar style={{ backgroundColor: "#1677ff", cursor: "pointer" }}>{user.name.charAt(0).toUpperCase()}</Avatar>;
           }
@@ -152,15 +154,6 @@ const Bills = () => {
       </div>
 
       <Card>
-        <Space style={{ marginBottom: 16 }}>
-          <Input
-            placeholder="Search vendor or email..."
-            prefix={<SearchOutlined />}
-            style={{ width: 300 }}
-          />
-
-        </Space>
-
         <Table
           columns={columns}
           dataSource={bills}

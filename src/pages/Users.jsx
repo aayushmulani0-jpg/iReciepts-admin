@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { getUsers, deleteUser } from "../api";
+import { useNavigate } from "react-router-dom";
+import { getUsers, deleteUser, getUserById } from "../api";
 import { Table, Card, Input, Button, Tag, Avatar, Space, Typography, message, Modal, Popover, Divider } from "antd";
-import { SearchOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
+import { SearchOutlined, DeleteOutlined, UserOutlined, EyeOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -13,6 +14,7 @@ const normalizeUser = (user) => ({
 });
 
 const Users = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -21,10 +23,31 @@ const Users = () => {
   const fetchUsersData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getUsers(1, 20, search);
-      const rawUsers = data?.data || [];
+      const trimmedSearch = search.trim();
+      let rawUsers = [];
+      let currentTotal = 0;
+
+      // If search string matches a 24-character hex ID (MongoDB ObjectId)
+      if (/^[a-fA-F0-9]{24}$/.test(trimmedSearch)) {
+        try {
+          const userRes = await getUserById(trimmedSearch);
+          if (userRes?.data) {
+            rawUsers = [userRes.data];
+            currentTotal = 1;
+          }
+        } catch (e) {
+          // Ignore and fallback to normal search
+        }
+      }
+
+      if (rawUsers.length === 0) {
+        const data = await getUsers(1, 20, trimmedSearch);
+        rawUsers = data?.data || [];
+        currentTotal = data?.meta?.total || 0;
+      }
+
       setUsers(Array.isArray(rawUsers) ? rawUsers.map(normalizeUser) : []);
-      setTotal(data?.meta?.total || 0);
+      setTotal(currentTotal);
     } catch (err) {
       console.error("Failed to load users.", err);
       message.error(err.message || "Failed to load users.");
@@ -85,18 +108,22 @@ const Users = () => {
 
           let avatarNode = <Avatar icon={<UserOutlined />} style={{ cursor: "pointer" }} />;
 
-          if (record.avtar) {
-            avatarNode = <Avatar src={record.avtar} style={{ cursor: "pointer" }} />;
+          const avatarUrl = record.avatar || record.profilePicture || record.picture || record.avtar;
+          if (avatarUrl) {
+            avatarNode = <Avatar src={avatarUrl} style={{ cursor: "pointer" }} />;
           } else if (record.name) {
             avatarNode = <Avatar style={{ backgroundColor: "#1677ff", cursor: "pointer" }}>{record.name.charAt(0).toUpperCase()}</Avatar>;
           }
 
           return (
-            <Space>
+            <Space 
+              style={{ cursor: "pointer" }} 
+              onClick={() => navigate(`/users/${record.id}`)}
+            >
               <Popover content={userDetails} title="User Details" trigger="hover">
                 {avatarNode}
               </Popover>
-              <Text strong>{record.name}</Text>
+              <Text strong style={{ color: "#1677ff", textDecoration: "underline" }}>{record.name}</Text>
             </Space>
           );
         }
@@ -141,12 +168,15 @@ const Users = () => {
       key: "actions",
       align: "right",
       render: (_, record) => (
-        <Button
-          danger
-          icon={<DeleteOutlined />}
-          onClick={() => handleDelete(record.id)}
-          disabled={!record.id}
-        />
+        <Space>
+          <Button
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+            disabled={!record.id}
+            title="Delete User"
+          />
+        </Space>
       )
     }
   ];
