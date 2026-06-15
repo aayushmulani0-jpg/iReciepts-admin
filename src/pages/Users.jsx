@@ -110,14 +110,14 @@ const Users = () => {
 
           const avatarUrl = record.avatar || record.profilePicture || record.picture || record.avtar;
           if (avatarUrl) {
-            avatarNode = <Avatar src={avatarUrl} style={{ cursor: "pointer" }} />;
+            avatarNode = <Avatar src={<img src={avatarUrl} alt="avatar" />} style={{ cursor: "pointer" }} />;
           } else if (record.name) {
             avatarNode = <Avatar style={{ backgroundColor: "#1677ff", cursor: "pointer" }}>{record.name.charAt(0).toUpperCase()}</Avatar>;
           }
 
           return (
-            <Space 
-              style={{ cursor: "pointer" }} 
+            <Space
+              style={{ cursor: "pointer" }}
               onClick={() => navigate(`/users/${record.id}`)}
             >
               <Popover content={userDetails} title="User Details" trigger="hover">

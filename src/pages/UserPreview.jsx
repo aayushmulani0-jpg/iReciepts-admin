@@ -142,7 +142,7 @@ const UserPreview = () => {
           <Flex wrap="wrap" justify="space-between" align="center" gap="large">
             <Space size="large" align="center">
               {avatarUrl ? (
-                <Avatar src={avatarUrl} size={100} />
+                <Avatar src={<img src={avatarUrl} alt="avatar" />} size={100} />
               ) : (
                 <Avatar size={100} icon={<UserOutlined />} style={{ backgroundColor: "#1677ff", fontSize: 40 }}>
                   {user.name ? user.name.charAt(0).toUpperCase() : ""}
